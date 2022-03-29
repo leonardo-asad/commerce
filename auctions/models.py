@@ -13,7 +13,7 @@ class Listing(models.Model):
     listed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="publications")
 
     def __str__(self):
-        return f"Listing title: {self.title}. Created on {self.date}. Listed by: {listed_by}"
+        return f"Listing title: {self.title}. Created on {self.date}."
 
 class Bid(models.Model):
     date = models.DateField()
@@ -22,7 +22,7 @@ class Bid(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="listing_bids")
 
     def __str__(self):
-        return f"Bid made by: {self.bid_author}. Created on {self.date}. On listing: {self.listed_by}"
+        return f"Bid made by: {self.bid_author}. Created on {self.date}."
 
 class Comment(models.Model):
     comment = models.TextField()
@@ -31,4 +31,4 @@ class Comment(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="listing_comments")
 
     def __str__(self):
-        return f"Comment made by: {self.author}. Created on {self.date}. On listing: {self.listing}"
+        return f"Comment made by: {self.author}. Created on {self.date}."
