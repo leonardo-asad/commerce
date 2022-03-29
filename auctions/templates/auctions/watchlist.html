@@ -1,0 +1,12 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>Watchlist</h2>
+
+    {% for instance in watchlist %}
+    <ul>
+      <li>{{ instance.listing.title }}</li>
+    </ul>
+    {% endfor %}
+
+{% endblock %}

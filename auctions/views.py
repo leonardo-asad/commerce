@@ -3,12 +3,17 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.contrib.auth.decorators import login_required
 
-from .models import User
+from .models import User, Listing, Bid, Comment, Watchlist
+
+from datetime import datetime
 
 
 def index(request):
-    return render(request, "auctions/index.html")
+    return render(request, "auctions/index.html", {
+        'listings': Listing.objects.all()
+    })
 
 
 def login_view(request):
@@ -61,3 +66,57 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "auctions/register.html")
+
+@login_required
+def create(request):
+    if request.method == "POST":
+        if not len(Listing.objects.filter(title=request.POST['title'])) == 0:
+            return render(request, "auctions/create.html", {
+                'message': "This title already exist. Please use another."
+            })
+
+        new_listing = Listing(title=request.POST['title'],
+                              description=request.POST['description'],
+                              price=request.POST['price'],
+                              date= datetime.now(),
+                              listed_by=request.user)
+        new_listing.save()
+
+        return HttpResponseRedirect(reverse("index"))
+        #breakpoint()
+
+    return render(request, "auctions/create.html")
+
+def listings(request, listing_id):
+    listing = Listing.objects.get(id=listing_id)
+
+    return render(request, "auctions/listings.html", {
+        'listing': listing
+    })
+
+@login_required
+def watchlist(request):
+
+    if request.method == "POST":
+        if request.POST['watchlist'] == "add":
+            listing_id = int(request.POST['id'])
+
+            listing = Listing.objects.get(pk=listing_id)
+            #breakpoint()
+            if not len(Watchlist.objects.filter(user=request.user,listing=listing).values()) == 0:
+                return render(request, "auctions/listings.html", {
+                    "message": "Already in Watchlist"
+                })
+
+            watchlist = Watchlist(user=request.user,
+                                  listing=listing)
+
+            watchlist.save()
+
+            return HttpResponseRedirect(reverse("watchlist"))
+
+    watchlist = Watchlist.objects.filter(user=request.user)
+
+    return render(request, "auctions/watchlist.html", {
+        'watchlist': watchlist
+    })

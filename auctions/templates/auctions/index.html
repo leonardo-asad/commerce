@@ -2,6 +2,16 @@
 
 {% block body %}
     <h2>Active Listings</h2>
-
-    TODO
+    {% for listing in listings %}
+    {% if listing.active == True %}
+    <div class="card" style="width: 18rem;">
+      <img class="card-img-top" src="{{ listing.image }}" alt="Card image cap">
+        <div class="card-body">
+              <h5 class="card-title">{{ listing.title }}</h5>
+              <p class="card-text"> {{ listing.description }}</p>
+              <a href="{% url 'listings' listing.id %}" class="btn btn-primary">Access</a>
+        </div>
+    </div>
+    {% endif %}
+    {% endfor %}
 {% endblock %}
