@@ -1,43 +1,42 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Listing: {{ listing.title }}</h2><br>
+    <h2>Listing: {{ listing.title }}</h2>
     {% if user.is_authenticated %}
-    {% if message %}
-    <div class="alert alert-primary" role="alert">
-      {{ message }}
-    </div>
-    {% endif %}
-        <form action="{% url 'watchlist' %}" method="post">
-          {% csrf_token %}
-          <input type="hidden" name ="watchlist" value="add">
-          <input type="hidden" name ="id" value="{{ listing.id }}">
-          <button type="submit" class="btn btn-secondary btn-sm">Add to Watchlist</button>
+        {% if message %}
+            <div class="alert alert-primary" role="alert">
+            {{ message }}
+            </div>
+        {% endif %}
+        <form action="{% url 'listings' listing.id%}" method="post">
+            {% csrf_token %}
+            <input type="hidden" name ="watchlist" value="add">
+            <button type="submit" class="btn btn-secondary btn-sm">Add to Watchlist</button>
         </form>
         <br>
     {% endif %}
+
+    <img src="{{ listing.image }}" style="width:400px;">
     <h4>Description:</h4>
     <p>{{ listing.description }}</p>
     <h4>Price: {{ listing.price }}</h4>
     {% if user.is_authenticated %}
     <form>
-      <div class="mb-3">
-        <label class="form-label">Bid</label>
-        <input type="number" class="form-control" id="exampleInputPassword1">
-      </div>
-      <button type="submit" class="btn btn-primary">Place Bid</button>
+        <div class="mb-3">
+            <label class="form-label">Bid</label>
+            <input type="number" class="form-control" id="exampleInputPassword1">
+        </div>
+        <button type="submit" class="btn btn-primary">Place Bid</button>
     </form>
     {% endif %}
     <br>
     <h4>Details:</h4>
     <ul>
-      <li>Listed by: {{ listing.listed_by.username }}</li>
-      {% if listing.category == '' %}
-        <li>Category: No Category Listed</li>
-      {% else %}
-      <li>Category: {{ listing.category }}</li>
-      {% endif %}
+        <li>Listed by: {{ listing.listed_by.username }}</li>
+        {% if listing.category == '' %}
+            <li>Category: No Category Listed</li>
+        {% else %}
+            <li>Category: {{ listing.category }}</li>
+        {% endif %}
     </ul>
-
-
 {% endblock %}

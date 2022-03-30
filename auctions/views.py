@@ -88,24 +88,16 @@ def create(request):
     return render(request, "auctions/create.html")
 
 def listings(request, listing_id):
+
     listing = Listing.objects.get(id=listing_id)
-
-    return render(request, "auctions/listings.html", {
-        'listing': listing
-    })
-
-@login_required
-def watchlist(request):
 
     if request.method == "POST":
         if request.POST['watchlist'] == "add":
-            listing_id = int(request.POST['id'])
 
-            listing = Listing.objects.get(pk=listing_id)
-            #breakpoint()
             if not len(Watchlist.objects.filter(user=request.user,listing=listing).values()) == 0:
                 return render(request, "auctions/listings.html", {
-                    "message": "Already in Watchlist"
+                    "message": "Already in Watchlist",
+                    'listing': listing
                 })
 
             watchlist = Watchlist(user=request.user,
@@ -114,6 +106,13 @@ def watchlist(request):
             watchlist.save()
 
             return HttpResponseRedirect(reverse("watchlist"))
+
+    return render(request, "auctions/listings.html", {
+        'listing': listing
+    })
+
+@login_required
+def watchlist(request):
 
     watchlist = Watchlist.objects.filter(user=request.user)
 
