@@ -7,28 +7,61 @@
             <div class="alert alert-primary" role="alert">
             {{ message }}
             </div>
-        {% endif %}
+            <form action="{% url 'listings' listing.id%}" method="post">
+              {% csrf_token %}
+              <input type="hidden" name ="listings" value="remove_watchlist">
+              <button type="submit" class="btn btn-secondary btn-sm">Watchlist</button>
+          </form>
+          <br>
+        {% else %}
         <form action="{% url 'listings' listing.id%}" method="post">
             {% csrf_token %}
-            <input type="hidden" name ="watchlist" value="add">
-            <button type="submit" class="btn btn-secondary btn-sm">Add to Watchlist</button>
+            <input type="hidden" name ="listings" value="add_watchlist">
+            <button type="submit" class="btn btn-secondary btn-sm">Watchlist</button>
         </form>
         <br>
+        {% endif %}
     {% endif %}
 
     <img src="{{ listing.image }}" style="width:400px;">
     <h4>Description:</h4>
     <p>{{ listing.description }}</p>
-    <h4>Price: {{ listing.price }}</h4>
+    <h4>Starting Price: {{ listing.price }}</h4>
+
     {% if user.is_authenticated %}
-    <form>
-        <div class="mb-3">
-            <label class="form-label">Bid</label>
-            <input type="number" class="form-control" id="exampleInputPassword1">
-        </div>
-        <button type="submit" class="btn btn-primary">Place Bid</button>
-    </form>
+        {% if not user == listing.listed_by %}
+            {% if listing.active == False and user == listing.winner %}
+                <div class="alert alert-primary" role="alert">
+                  You won the auction with a bid of ${{ listing.winning_bid }} USD
+                </div>
+            {% else %}
+                <form action="{% url 'listings' listing.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <input type="hidden" name="listings" value="place_bid">
+                        <label class="form-label">Bid</label>
+                        <input type="number" class="form-control" name="bid">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Place Bid</button>
+                </form>
+            {% endif %}
+        {% else %}
+              {% if listing.active == False %}
+                  <div class="alert alert-primary" role="alert">
+                      Closed Auction. Winner: {{ listing.winner }}. Final Bid: ${{ listing.winning_bid }} USD
+                  </div>
+              {% else %}
+                  <form action="{% url 'listings' listing.id %}" method="post">
+                      {% csrf_token %}
+                          <div class="mb-3">
+                              <input type="hidden" name="listings" value="close_auction">
+                          </div>
+                      <button type="submit" class="btn btn-primary">Close Auction</button>
+                  </form>
+              {% endif %}
+        {% endif %}
     {% endif %}
+
     <br>
     <h4>Details:</h4>
     <ul>

@@ -2,26 +2,20 @@
 
 {% block body %}
     <h2>Create Listing</h2>
-    <form action="{% url 'create' %}" method="post">
-      {% csrf_token %}
-      {% if message %}
-          <div class="alert alert-primary" role="alert">
+
+    {% if message %}
+        <div class="alert alert-primary" role="alert">
             {{ message }}
-          </div>
-      {% endif %}
-      <div class="mb-3">
-        <label class="form-label">Title</label>
-        <input type="text" class="form-control" id="exampleFormControlInput1" name="title">
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Description</label>
-        <textarea type="text" class="form-control" rows=10 id="exampleFormControlInput1" name="description"></textarea>
-      </div>
-      <div class="mb-3">
-        <label class="form-label">Starting Bid</label>
-        <input type="number" class="form-control" id="exampleFormControlInput1" name="price">
-      </div>
-      <button type="submit" class="btn btn-primary">Create</button>
-    </form>
+        </div>
+    {% endif %}
+
+    <div class="form-group" style="margin-left: 50px; margin-right: 50px;">
+        <form action="{% url 'create' %}" method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+    </div>
+
 
 {% endblock %}

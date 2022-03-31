@@ -1,0 +1,22 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h2>{{ category }} Active Listings</h2>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-4">
+      {% for listing in listings %}
+        <div class="col mb-4">
+          <div class="card h-100">
+            <div style="height:500px;">
+              <img class="card-img-top" src="{{ listing.image }}" alt="Card image cap" style="height:100%;object-fit: contain;">
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ listing.title }}</h5>
+                <p class="card-text"> {{ listing.description }}</p>
+                <a href="{% url 'listings' listing.id %}" class="btn btn-primary">Access</a>
+            </div>
+          </div>
+        </div>
+
+      {% endfor %}
+  </div>
+{% endblock %}

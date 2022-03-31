@@ -1,3 +1,4 @@
+from typing_extensions import Required
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -12,6 +13,8 @@ class Listing(models.Model):
     price = models.PositiveIntegerField()
     category = models.CharField(max_length=64)
     listed_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name="publications")
+    winner = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    winning_bid = models.PositiveIntegerField(null=True, blank=True)
     date = models.DateField()
 
     def __str__(self):

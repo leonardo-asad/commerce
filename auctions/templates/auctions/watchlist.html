@@ -4,9 +4,9 @@
     <h2>Watchlist</h2>
 
     {% for instance in watchlist %}
-    <ul>
-      <li>{{ instance.listing.title }}</li>
-    </ul>
+        <ul>
+            <li><a href="{% url 'listings' instance.listing.id %}">{{ instance.listing.title }}</a></li>
+        </ul>
     {% endfor %}
 
 {% endblock %}
