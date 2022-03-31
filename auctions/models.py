@@ -41,3 +41,6 @@ class Comment(models.Model):
 class Watchlist(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="followers")
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name="followers")
+
+    def __str__(self):
+        return f"User: {self.user.username}. Listing: {self.listing.title}"

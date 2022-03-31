@@ -1,5 +1,5 @@
 from django import forms
-from .models import Listing
+from .models import Listing, Bid
 
 class ListingForm(forms.ModelForm):
     class Meta:
@@ -13,3 +13,9 @@ class ListingForm(forms.ModelForm):
             'image': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
         }
+
+class BidForm(forms.Form):
+    bid = forms.IntegerField(widget=forms.NumberInput(attrs={'class':'form-control'}))
+
+class CommentForm(forms.Form):
+    comment = forms.CharField(widget=forms.Textarea(attrs={'class':'form-control'}))

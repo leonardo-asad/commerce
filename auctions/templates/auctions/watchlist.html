@@ -1,11 +1,12 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Watchlist</h2>
+    <h2 style="margin:15px">Watchlist</h2>
+    <div style="border-bottom: solid 1px;color: rgba(0,0,0,.1);margin-bottom: 30px;"></div>
 
     {% for instance in watchlist %}
-        <ul>
-            <li><a href="{% url 'listings' instance.listing.id %}">{{ instance.listing.title }}</a></li>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item"><a href="{% url 'listings' instance.listing.id %}">{{ instance.listing.title }}</a></li>
         </ul>
     {% endfor %}
 

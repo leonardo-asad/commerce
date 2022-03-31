@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 
 from .models import User, Listing, Bid, Comment, Watchlist
-from .forms import ListingForm
+from .forms import BidForm, CommentForm, ListingForm
 
 from datetime import datetime
 
@@ -96,13 +96,37 @@ def create(request):
         'form': ListingForm()
     })
 
+
+def get_current_price(listing):
+    # Filter bids in order to get the current price of the listing
+    bids = Bid.objects.filter(listing=listing).values()
+
+    if len(bids) == 0:
+        return listing.price
+    return max([bid['bid'] for bid in bids])
+
+def get_comments(listing):
+    # Filter listing comments
+    comments = Comment.objects.filter(listing=listing)
+
+    if len(comments) == 0:
+        return None
+    return comments
+
+
 def listings(request, listing_id):
 
+    # Lookup the listing data in the model database
     listing = Listing.objects.get(id=listing_id)
 
+    # Filter who watchlisted this post
+    watchlists = Watchlist.objects.filter(listing=listing).values()
+    watchlists_users = [watchlist['user_id'] if not len(watchlists) == 0 else '' for watchlist in watchlists]
+
     if request.method == "POST":
+
         # Add listing to watchlist
-        if request.POST['listings'] == "add_watchlist":
+        if "add_watchlist" in request.POST:
 
             if not len(Watchlist.objects.filter(user=request.user,listing=listing).values()) == 0:
                 return render(request, "auctions/listings.html", {
@@ -115,59 +139,105 @@ def listings(request, listing_id):
 
             watchlist.save()
 
-            return HttpResponseRedirect(reverse("watchlist"))
+            # Filter who watchlisted this post
+            watchlists = Watchlist.objects.filter(listing=listing).values()
+            watchlists_users = [watchlist['user_id'] if not len(watchlists) == 0 else '' for watchlist in watchlists]
+
+            return render(request, "auctions/listings.html", {
+                'listing': listing,
+                'message': "Succesfully added to Watchlist!",
+                'watchlists': watchlists_users,
+                'current_price': get_current_price(listing),
+                'comments': get_comments(listing),
+                'bid_form': BidForm(),
+                'comment_form': CommentForm()
+            })
 
         # Remove listing from watchlist
-        if request.POST['listings'] == "remove_watchlist":
+        if "remove_watchlist" in request.POST:
 
             watchlist = Watchlist.objects.get(user=request.user,listing=listing)
 
             watchlist.delete()
 
             return render(request, "auctions/listings.html", {
-                'listing': listing
+                'listing': listing,
+                'message': "Succesfully removed from Watchlist",
+                'current_price': get_current_price(listing),
+                'comments': get_comments(listing),
+                'bid_form': BidForm(),
+                'comment_form': CommentForm()
             })
 
         # Place Bid
-        if request.POST['listings'] == "place_bid":
-            bid = int(request.POST['bid'])
+        if "bid" in request.POST:
 
-            if not bid >= listing.price:
+            bid_form = BidForm(request.POST)
+
+            if bid_form.is_valid():
+
+                bid = bid_form.cleaned_data['bid']
+
+                if not bid >= listing.price:
+                    return render(request, "auctions/listings.html", {
+                        'listing': listing,
+                        'message': f"The bid must be at least the starting price of ${listing.price} USD",
+                        'current_price': get_current_price(listing),
+                        'bid_form': BidForm(),
+                        'comments': get_comments(listing),
+                        'comment_form': CommentForm()
+                        })
+
+                previous_bids = Bid.objects.filter(listing=listing).values()
+
+                if not len(previous_bids) == 0:
+                    for previous_bid in previous_bids:
+                        if previous_bid['bid'] >= bid:
+                            return render(request, "auctions/listings.html", {
+                                    'listing': listing,
+                                    'message': "The bid must be greater than any bid that has been placed",
+                                    'current_price': get_current_price(listing),
+                                    'bid_form': BidForm(),
+                                    'comments': get_comments(listing),
+                                    'comment_form': CommentForm()
+                                    })
+
+                bid_object = Bid(listing=listing,
+                                bid=bid,
+                                bid_author=request.user,
+                                date=datetime.now())
+
+                bid_object.save()
+
                 return render(request, "auctions/listings.html", {
-                    'listing': listing,
-                    'message': f"The bid must be at least the starting price of ${listing.price} USD"
+                        'listing': listing,
+                        'message': "Bid placed succesfully",
+                        'current_price': get_current_price(listing),
+                        'bid_form': BidForm(),
+                        'comments': get_comments(listing),
+                        'comment_form': CommentForm()
                     })
 
-            previous_bids = Bid.objects.filter(listing=listing).values()
-
-            if not len(previous_bids) == 0:
-                for previous_bid in previous_bids:
-                    if previous_bid['bid'] >= bid:
-                        return render(request, "auctions/listings.html", {
-                                'listing': listing,
-                                'message': "The bid must be greater than any bid that has been placed"
-                                })
-
-            bid_object = Bid(listing=listing,
-                             bid=bid,
-                             bid_author=request.user,
-                             date=datetime.now())
-
-            bid_object.save()
-
             return render(request, "auctions/listings.html", {
-                    'listing': listing,
-                    'message': "Bid placed succesfully"
-                })
+                        'listing': listing,
+                        'current_price': get_current_price(listing),
+                        'bid_form': bid_form,
+                        'comments': get_comments(listing),
+                        'comment_form': CommentForm()
+                    })
 
         # Close Auction
-        if request.POST['listings'] == "close_auction":
+        if "close_auction" in request.POST:
             bids = Bid.objects.filter(listing=listing).values()
 
             if len(bids) == 0:
                 return render(request, "auctions/listings.html", {
                     'listing': listing,
-                    'message': "Cannot close de Auction because there is no placed bid yet"
+                    'message': "Cannot close the Auction because there is no placed bid yet",
+                    'current_price': get_current_price(listing),
+                    'bid_form': BidForm,
+                    'comments': get_comments(listing),
+                    'comment_form': CommentForm()
                 })
 
             max_bid = sorted(bids, key=lambda x: x['bid'], reverse=True)[0]
@@ -180,11 +250,47 @@ def listings(request, listing_id):
 
             return render(request, "auctions/listings.html", {
                     'listing': listing,
-                    'message': f"Auction closed succesfully. Winner {listing.winner}. Price ${listing.winning_bid} USD"
+                    'bid_form': bid_form,
+                    'comments': get_comments(listing)
                 })
 
+        if 'comment' in request.POST:
+            comment_form = CommentForm(request.POST)
+
+            if comment_form.is_valid():
+
+                comment=comment_form.cleaned_data['comment']
+
+                comment = Comment(listing=listing,
+                                  comment=comment,
+                                  author=request.user,
+                                  date=datetime.now())
+                comment.save()
+
+                return render(request, "auctions/listings.html", {
+                    'listing': listing,
+                    'watchlists': watchlists_users,
+                    'current_price': get_current_price(listing),
+                    'bid_form': BidForm(),
+                    'comments': get_comments(listing),
+                    'comment_form': CommentForm()})
+
+            return render(request, "auctions/listings.html", {
+                    'listing': listing,
+                    'watchlists': watchlists_users,
+                    'current_price': get_current_price(listing),
+                    'bid_form': BidForm(),
+                    'comments': get_comments(listing),
+                    'comment_form': comment_form})
+
+
     return render(request, "auctions/listings.html", {
-        'listing': listing
+        'listing': listing,
+        'watchlists': watchlists_users,
+        'current_price': get_current_price(listing),
+        'bid_form': BidForm(),
+        'comments': get_comments(listing),
+        'comment_form': CommentForm()
     })
 
 @login_required
